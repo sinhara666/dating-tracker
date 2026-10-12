@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dating Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg1:#0b0e1a;--bg2:#141a2e;--card:rgba(255,255,255,.04);--border:rgba(125,211,252,.15);--accent:#7dd3fc;--accent2:#c084fc;--text:#f0f4fa;--muted:#8a9bb0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:radial-gradient(ellipse 80% 50% at 50% -10%,#1e2a4a 0%,var(--bg1) 60%),var(--bg1);color:var(--text);min-height:100vh;padding:20px;max-width:640px;margin:0 auto;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 20% 80%,rgba(192,132,252,.08) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(125,211,252,.08) 0%,transparent 50%);pointer-events:none;z-index:-1}
+h1{font-size:1.7rem;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,#7dd3fc,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.5px}
+.sub{color:var(--muted);font-size:.85rem;margin-bottom:20px}
+.tabs{display:flex;gap:8px;margin-bottom:18px;padding:4px;background:rgba(255,255,255,.03);border-radius:14px;border:1px solid rgba(255,255,255,.06)}
+.tabs button{flex:1;margin:0;padding:11px;font-size:.87rem;font-weight:600;background:transparent;border:none;color:var(--muted);border-radius:10px;cursor:pointer;transition:all .25s ease}
+.tabs button.active{background:linear-gradient(135deg,#0284c7,#7c3aed);color:#fff;box-shadow:0 4px 20px rgba(2,132,199,.4);transform:translateY(-1px)}
+.tabs button:not(.active):hover{color:var(--text);background:rgba(255,255,255,.05)}
+.hidden{display:none}
+.card{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:16px;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.08);animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card h2{font-size:1.02rem;font-weight:700;margin-bottom:10px;background:linear-gradient(135deg,#7dd3fc,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.6px}
+input,select,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);color:var(--text);font-size:.95rem;transition:border .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(125,211,252,.15)}
+textarea{resize:vertical;min-height:56px}
+button{width:100%;margin-top:14px;padding:13px;border:none;border-radius:14px;background:linear-gradient(135deg,#0284c7,#7c3aed);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(2,132,199,.35),inset 0 1px 0 rgba(255,255,255,.2);transition:transform .15s,box-shadow .2s}
+button:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(2,132,199,.45),inset 0 1px 0 rgba(255,255,255,.2)}
+button:active{transform:translateY(0) scale(.98)}
+button.ghost{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--muted);box-shadow:none;margin-top:8px}
+button.ghost:hover{background:rgba(255,255,255,.08);color:var(--text)}
+button.small{width:auto;padding:8px 18px;font-size:.82rem;margin:10px 8px 0 0;border-radius:10px}
+.row2{display:flex;gap:10px}.row2>div{flex:1}
+.person{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 6px 24px rgba(0,0,0,.25);transition:transform .2s,box-shadow .2s,border-color .2s;animation:fadeUp .4s ease}
+.person:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 12px 36px rgba(0,0,0,.4);border-color:rgba(125,211,252,.35)}
+.person .top{display:flex;justify-content:space-between;align-items:center}
+.person .name{font-weight:700;font-size:1.08rem}
+.person .score{font-size:1.45rem;font-weight:800;text-shadow:0 2px 12px currentColor}
+.person .meta{font-size:.82rem;color:var(--muted);margin-top:5px}
+.score-high{color:#4ade80}.score-mid{color:#facc15}.score-low{color:#f87171}
+.empty{text-align:center;color:var(--muted);padding:28px 0;font-size:.9rem}
+.detail{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:16px;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.3);animation:fadeUp .4s ease}
+.detail h2{margin-bottom:12px;font-size:1.3rem}
+.detail .sec{margin-bottom:14px}
+.detail .sec h4{font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.detail .sec p{font-size:.92rem;line-height:1.6}
+.bar{height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;margin-top:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,.3)}
+.bar>div{height:100%;border-radius:6px;background:linear-gradient(90deg,#0284c7,#4ade80,#c084fc);box-shadow:0 0 12px rgba(125,211,252,.5);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.flag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.76rem;font-weight:600;margin:3px 5px 3px 0;animation:fadeUp .3s ease}
+.flag.green{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.flag.red{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.3)}
+.back{background:none;border:none;color:var(--accent);font-size:.92rem;font-weight:600;cursor:pointer;width:auto;padding:0;margin:0 0 14px 0;text-align:left;box-shadow:none}
+.back:hover{transform:translateX(-3px)}
+.checks label{display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--text);margin:8px 0;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;padding:8px 10px;border-radius:10px;transition:background .15s}
+.checks label:hover{background:rgba(255,255,255,.04)}
+.checks input{width:18px;height:18px;accent-color:#0284c7;flex-shrink:0}
+</style>
+</head>
+<body>
+<h1>Dating Tracker</h1>
+<p class="sub">Private. Everything stays on your device.</p>
+<div class="tabs">
+<button id="tabPeople" class="active" onclick="showTab('people')">People</button>
+<button id="tabAdd" onclick="showTab('add')">+ Add</button>
+<button id="tabMe" onclick="showTab('me')">Me</button>
+<button id="tabInsights" onclick="showTab('insights')">Insights</button>
+</div>
+
+<div id="panelPeople">
+<div id="peopleList"></div>
+</div>
+
+<div id="panelAdd" class="hidden">
+<div class="card">
+<h2 id="formTitle">Add Someone</h2>
+<input type="hidden" id="editId">
+<label>Name</label><input type="text" id="pName" placeholder="Their name">
+<div class="row2">
+<div><label>Age</label><input type="number" id="pAge" min="18" max="120"></div>
+<div><label>How you met</label><input type="text" id="pMet" placeholder="App, friend, work..."></div>
+</div>
+<label>Status</label>
+<select id="pStatus"><option>Talking</option><option>Dating</option><option>Relationship</option><option>It's complicated</option><option>Done</option></select>
+<label>Interests & hobbies (comma separated)</label><input type="text" id="pInterests" placeholder="hiking, cooking, gaming...">
+<label>What do you like about them?</label><textarea id="pLikes"></textarea>
+<label>What bothers you?</label><textarea id="pDislikes"></textarea>
+</div>
+<div class="card">
+<h2>Values & Lifestyle</h2>
+<div class="checks">
+<label><input type="checkbox" class="val" value="wants_kids"> Wants kids</label>
+<label><input type="checkbox" class="val" value="wants_marriage"> Wants marriage</label>
+<label><input type="checkbox" class="val" value="career_driven"> Career driven</label>
+<label><input type="checkbox" class="val" value="family_oriented"> Family oriented</label>
+<label><input type="checkbox" class="val" value="adventurous"> Adventurous / spontaneous</label>
+<label><input type="checkbox" class="val" value="homebody"> Homebody</label>
+<label><input type="checkbox" class="val" value="religious"> Religious / spiritual</label>
+<label><input type="checkbox" class="val" value="financially_stable"> Financially stable</label>
+</div>
+</div>
+<div class="card">
+<h2>Your Values (what matters to YOU)</h2>
+<p style="font-size:.8rem;color:#8a9bb0;margin-bottom:8px">Check what you want in a partner. This is what compatibility is scored against.</p>
+<div class="checks">
+<label><input type="checkbox" class="myval" value="wants_kids"> I want kids</label>
+<label><input type="checkbox" class="myval" value="wants_marriage"> I want marriage</label>
+<label><input type="checkbox" class="myval" value="career_driven"> I want them career driven</label>
+<label><input type="checkbox" class="myval" value="family_oriented"> I want them family oriented</label>
+<label><input type="checkbox" class="myval" value="adventurous"> I want adventurous</label>
+<label><input type="checkbox" class="myval" value="homebody"> I want a homebody</label>
+<label><input type="checkbox" class="myval" value="religious"> I want religious / spiritual</label>
+<label><input type="checkbox" class="myval" value="financially_stable"> I want financially stable</label>
+</div>
+<label>My interests (comma separated, for shared interest scoring)</label><input type="text" id="myInterests" placeholder="reading, travel, music...">
+<button class="ghost" onclick="saveMyValues()">Save my values</button>
+</div>
+<div class="card">
+<h2>Green & Red Flags</h2>
+<label>Green flags (comma separated)</label><input type="text" id="pGreen" placeholder="good listener, consistent, kind...">
+<label>Red flags (comma separated)</label><input type="text" id="pRed" placeholder="love bombs, disappears, lies...">
+</div>
+<div class="card">
+<h2>How They Make You Feel</h2>
+<label>Overall feeling (1 = drained, 10 = energized)</label>
+<select id="pFeeling"><option value="">--</option><option value="1">1 - Drained</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 - Neutral</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10 - Energized</option></select>
+<label>Do you trust them? (1-10)</label>
+<select id="pTrust"><option value="">--</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
+<label>Notes</label><textarea id="pNotes" placeholder="Anything else..."></textarea>
+<button onclick="savePerson()">Save Person</button>
+<button class="ghost" id="cancelEdit" style="display:none" onclick="cancelEdit()">Cancel edit</button>
+</div>
+</div>
+
+<div id="panelCompare" class="hidden">
+<div class="card">
+<h2>Compatibility Ranking</h2>
+<p style="font-size:.82rem;color:#8a9bb0;margin-bottom:12px">Ranked by how well each person matches YOUR values, shared interests, green flags, and how they make you feel. Red flags pull the score down hard.</p>
+<div id="rankList"></div>
+</div>
+</div>
+
+<div id="panelMe" class="hidden">
+<div class="card">
+<h2>About You</h2>
+<p style="font-size:.82rem;color:#8a9bb0;margin-bottom:8px">Be honest. This is how the app spots your blind spots.</p>
+<label>Your age</label><input type="number" id="meAge" min="18" max="120">
+<label>How would you describe yourself? (comma separated traits)</label><input type="text" id="meTraits" placeholder="funny, impatient, loyal, overthinker...">
+<label>Your attachment style</label>
+<select id="meAttach"><option value="">--</option><option>Secure</option><option>Anxious</option><option>Avoidant</option><option>Disorganized</option><option>Not sure</option></select>
+<label>How do you handle conflict?</label>
+<select id="meConflict"><option value="">--</option><option>Talk it out right away</option><option>Need space first, then talk</option><option>Shut down / go silent</option><option>Get heated</option><option>Avoid it entirely</option></select>
+<label>Your love language</label>
+<select id="meLove"><option value="">--</option><option>Words of affirmation</option><option>Quality time</option><option>Physical touch</option><option>Acts of service</option><option>Receiving gifts</option></select>
+<label>Things YOU do that push people away (be real)</label><textarea id="meRedFlags" placeholder="I get jealous, I shut down, I test people..."></textarea>
+<label>Your relationship patterns (what keeps happening?)</label><textarea id="mePatterns" placeholder="I always pick emotionally unavailable people, I rush in too fast..."></textarea>
+<label>What are you working on about yourself?</label><textarea id="meGrowth" placeholder="..."></textarea>
+<button onclick="saveMeProfile()">Save My Profile</button>
+</div>
+<div class="card">
+<h2>Daily Mood Check-in</h2>
+<label>How are you feeling right now? (1 = terrible, 10 = amazing)</label>
+<select id="moodScore"><option value="">--</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
+<label>What's driving it?</label><input type="text" id="moodNote" placeholder="fight with Mike, good date, work stress...">
+<button onclick="logMood()">Log Mood</button>
+</div>
+<div class="card">
+<h2>Mood History</h2>
+<div id="moodList"></div>
+</div>
+</div>
+
+<div id="panelInsights" class="hidden">
+<div class="card">
+<h2>What The Data Says About You</h2>
+<p style="font-size:.82rem;color:#8a9bb0;margin-bottom:12px">Patterns from your check-ins, your profile, and how you rate the people you date.</p>
+<div id="insightList"></div>
+</div>
+<div class="card">
+<h2>Compatibility Ranking</h2>
+<p style="font-size:.82rem;color:#8a9bb0;margin-bottom:12px">Ranked by how well each person matches YOUR values, shared interests, green flags, and how they make you feel. Red flags pull the score down hard.</p>
+<div id="rankList"></div>
+</div>
+</div>
+
+<div id="panelDetail" class="hidden">
+<button class="back" onclick="showTab('people')">← Back to people</button>
+<div id="detailContent"></div>
+</div>
+
+<script>
+const PK="dating_tracker_people",MK="dating_tracker_me",MEPK="dating_tracker_meprofile",MOODK="dating_tracker_moods";
+function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+let people=load(PK,[]),me=load(MK,{vals:[],interests:""}),meProfile=load(MEPK,{}),moods=load(MOODK,[]);
+
+function getVals(cls){return [...document.querySelectorAll("."+cls+":checked")].map(c=>c.value)}
+function setVals(cls,vals){document.querySelectorAll("."+cls).forEach(c=>c.checked=vals.includes(c.value))}
+
+function score(p){
+  let pts=0,max=100;
+  // Values alignment (40 pts)
+  const myVals=me.vals||[];
+  if(myVals.length){
+    const match=p.vals.filter(v=>myVals.includes(v)).length;
+    pts+=Math.round(40*match/myVals.length);
+  } else pts+=20;
+  // Shared interests (20 pts)
+  const mine=(me.interests||"").toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);
+  const theirs=(p.interests||"").toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);
+  if(mine.length&&theirs.length){
+    const shared=theirs.filter(t=>mine.some(m=>m===t||t.includes(m)||m.includes(t))).length;
+    pts+=Math.round(20*Math.min(shared/3,1));
+  } else pts+=10;
+  // Green flags (15 pts)
+  const green=(p.green||"").split(",").filter(s=>s.trim()).length;
+  pts+=Math.min(Math.round(green*3),15);
+  // Feeling + trust (15 pts)
+  if(p.feeling)pts+=Math.round(+p.feeling*0.75);
+  if(p.trust)pts+=Math.round(+p.trust*0.75);
+  // Red flags: -12 each, cap at -36
+  const red=(p.red||"").split(",").filter(s=>s.trim()).length;
+  pts-=Math.min(red*12,36);
+  return Math.max(0,Math.min(100,pts));
+}
+function scoreClass(s){return s>=70?"score-high":s>=45?"score-mid":"score-low"}
+function verdict(s,redCount){
+  if(redCount>=3)return "Walk away. Too many red flags.";
+  if(s>=75)return "Strong match. Worth investing in.";
+  if(s>=55)return "Promising, but watch the gaps below.";
+  if(s>=35)return "Proceed with caution.";
+  return "Probably not your person.";
+}
+
+function showTab(t){
+  ["people","add","me","insights"].forEach(x=>{
+    document.getElementById("panel"+x[0].toUpperCase()+x.slice(1)).classList.toggle("hidden",x!==t);
+    document.getElementById("tab"+x[0].toUpperCase()+x.slice(1)).classList.toggle("active",x===t);
+  });
+  document.getElementById("panelDetail").classList.add("hidden");
+  document.getElementById("panelCompare").classList.add("hidden");
+  if(t==="people")renderPeople();
+  if(t==="me"){loadMeProfile();renderMoods()}
+  if(t==="insights")renderInsights();
+  if(t==="add"){document.getElementById("formTitle").textContent="Add Someone";document.getElementById("editId").value="";document.getElementById("cancelEdit").style.display="none"}
+}
+function saveMyValues(){
+  me={vals:getVals("myval"),interests:document.getElementById("myInterests").value};
+  save(MK,me);alert("Your values saved. Compatibility scores updated.");
+}
+function savePerson(){
+  const id=document.getElementById("editId").value;
+  const p={id:id||Date.now().toString(),name:document.getElementById("pName").value.trim(),age:document.getElementById("pAge").value,met:document.getElementById("pMet").value.trim(),status:document.getElementById("pStatus").value,interests:document.getElementById("pInterests").value,likes:document.getElementById("pLikes").value,dislikes:document.getElementById("pDislikes").value,vals:getVals("val"),green:document.getElementById("pGreen").value,red:document.getElementById("pRed").value,feeling:document.getElementById("pFeeling").value,trust:document.getElementById("pTrust").value,notes:document.getElementById("pNotes").value};
+  if(!p.name){alert("Enter a name");return}
+  // auto-save my values too if set
+  const mv=getVals("myval");
+  if(mv.length||document.getElementById("myInterests").value){me={vals:mv,interests:document.getElementById("myInterests").value};save(MK,me)}
+  if(id){const i=people.findIndex(x=>x.id===id);people[i]=p}else people.push(p);
+  save(PK,people);clearForm();showTab("people");
+}
+function clearForm(){
+  ["pName","pAge","pMet","pInterests","pLikes","pDislikes","pGreen","pRed","pNotes","myInterests"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("pStatus").selectedIndex=0;document.getElementById("pFeeling").value="";document.getElementById("pTrust").value="";
+  document.querySelectorAll(".val").forEach(c=>c.checked=false);
+  document.getElementById("editId").value="";
+}
+function cancelEdit(){clearForm();showTab("people")}
+function editPerson(id){
+  const p=people.find(x=>x.id===id);if(!p)return;
+  showTab("add");
+  document.getElementById("formTitle").textContent="Edit "+p.name;
+  document.getElementById("editId").value=p.id;
+  document.getElementById("cancelEdit").style.display="block";
+  document.getElementById("pName").value=p.name||"";document.getElementById("pAge").value=p.age||"";
+  document.getElementById("pMet").value=p.met||"";document.getElementById("pStatus").value=p.status||"Talking";
+  document.getElementById("pInterests").value=p.interests||"";document.getElementById("pLikes").value=p.likes||"";
+  document.getElementById("pDislikes").value=p.dislikes||"";
+  setVals("val",p.vals||[]);setVals("myval",me.vals||[]);
+  document.getElementById("myInterests").value=me.interests||"";
+  document.getElementById("pGreen").value=p.green||"";document.getElementById("pRed").value=p.red||"";
+  document.getElementById("pFeeling").value=p.feeling||"";document.getElementById("pTrust").value=p.trust||"";
+  document.getElementById("pNotes").value=p.notes||"";
+}
+function deletePerson(id){if(confirm("Delete this person?")){people=people.filter(x=>x.id!==id);save(PK,people);showTab("people")}}
+function renderPeople(){
+  const el=document.getElementById("peopleList");
+  if(!people.length){el.innerHTML='<div class="empty">No one tracked yet.<br>Tap + Add to start.</div>';return}
+  const sorted=[...people].sort((a,b)=>score(b)-score(a));
+  el.innerHTML=sorted.map(p=>{
+    const s=score(p);
+    return `<div class="person" onclick="viewDetail('${p.id}')"><div class="top"><span class="name">${esc(p.name)}</span><span class="score ${scoreClass(s)}">${s}</span></div><div class="meta">${esc(p.status)}${p.age?" · "+esc(p.age):""}${p.met?" · met: "+esc(p.met):""}</div></div>`;
+  }).join("");
+}
+function viewDetail(id){
+  const p=people.find(x=>x.id===id);if(!p)return;
+  const s=score(p),redCount=(p.red||"").split(",").filter(x=>x.trim()).length;
+  const green=(p.green||"").split(",").map(x=>x.trim()).filter(Boolean);
+  const red=(p.red||"").split(",").map(x=>x.trim()).filter(Boolean);
+  const myVals=me.vals||[];
+  const matched=p.vals.filter(v=>myVals.includes(v)),missed=myVals.filter(v=>!p.vals.includes(v));
+  const vLabel=v=>v.replace(/_/g," ");
+  ["people","add","compare"].forEach(x=>document.getElementById("panel"+x[0].toUpperCase()+x.slice(1)).classList.add("hidden"));
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("panelDetail").classList.remove("hidden");
+  document.getElementById("detailContent").innerHTML=`<div class="detail">
+    <h2>${esc(p.name)} <span class="${scoreClass(s)}" style="font-size:1.4rem">${s}/100</span></h2>
+    <p style="font-size:.92rem;color:#8a9bb0;margin-bottom:14px"><em>${esc(verdict(s,redCount))}</em></p>
+    <div class="bar"><div style="width:${s}%"></div></div>
+    <div class="sec" style="margin-top:14px"><h4>Values alignment</h4>
+    <p>${matched.length?matched.map(v=>`<span class="flag green">${esc(vLabel(v))}</span>`).join(""):"No shared values checked."}</p>
+    ${missed.length?`<p style="margin-top:6px;font-size:.82rem;color:#8a9bb0">Missing what you want: ${missed.map(v=>esc(vLabel(v))).join(", ")}</p>`:""}</div>
+    ${green.length?`<div class="sec"><h4>Green flags</h4><p>${green.map(g=>`<span class="flag green">${esc(g)}</span>`).join("")}</p></div>`:""}
+    ${red.length?`<div class="sec"><h4>Red flags</h4><p>${red.map(r=>`<span class="flag red">${esc(r)}</span>`).join("")}</p></div>`:""}
+    <div class="sec"><h4>How they make you feel</h4><p>${p.feeling?p.feeling+"/10 energized":"Not rated"} · ${p.trust?"Trust "+p.trust+"/10":"Trust not rated"}</p></div>
+    ${p.likes?`<div class="sec"><h4>What you like</h4><p>${esc(p.likes)}</p></div>`:""}
+    ${p.dislikes?`<div class="sec"><h4>What bothers you</h4><p>${esc(p.dislikes)}</p></div>`:""}
+    ${p.notes?`<div class="sec"><h4>Notes</h4><p>${esc(p.notes)}</p></div>`:""}
+    <div style="font-size:.8rem;color:#8a9bb0;margin-top:8px">${esc(p.status)}${p.age?" · "+esc(p.age):""}${p.met?" · met "+esc(p.met):""}${p.interests?" · likes "+esc(p.interests):""}</div>
+    <button class="small" onclick="editPerson('${p.id}')">Edit</button><button class="small ghost" style="border:1px solid #450a0a;color:#f87171" onclick="deletePerson('${p.id}')">Delete</button>
+  </div>`;
+}
+function renderCompare(){
+  const el=document.getElementById("rankList");
+  if(!people.length){el.innerHTML='<div class="empty">Add people first.</div>';return}
+  const sorted=[...people].sort((a,b)=>score(b)-score(a));
+  el.innerHTML=sorted.map((p,i)=>{
+    const s=score(p),redCount=(p.red||"").split(",").filter(x=>x.trim()).length;
+    const medal=i===0?"🥇 ":i===1?"🥈 ":i===2?"🥉 ":"";
+    return `<div style="padding:10px 0;border-bottom:1px solid #2a3a52"><div style="display:flex;justify-content:space-between"><span style="font-weight:600">${medal}${esc(p.name)}</span><span class="${scoreClass(s)}" style="font-weight:800">${s}</span></div><div style="font-size:.8rem;color:#8a9bb0;margin-top:4px">${esc(verdict(s,redCount))}</div></div>`;
+  }).join("");
+}
+// restore my values on load
+setVals("myval",me.vals||[]);
+document.getElementById("myInterests").value=me.interests||"";
+renderPeople();
+
+function saveMeProfile(){
+  meProfile={age:document.getElementById("meAge").value,traits:document.getElementById("meTraits").value,attach:document.getElementById("meAttach").value,conflict:document.getElementById("meConflict").value,love:document.getElementById("meLove").value,redFlags:document.getElementById("meRedFlags").value,patterns:document.getElementById("mePatterns").value,growth:document.getElementById("meGrowth").value};
+  save(MEPK,meProfile);alert("Your profile saved.");
+}
+function loadMeProfile(){
+  document.getElementById("meAge").value=meProfile.age||"";
+  document.getElementById("meTraits").value=meProfile.traits||"";
+  document.getElementById("meAttach").value=meProfile.attach||"";
+  document.getElementById("meConflict").value=meProfile.conflict||"";
+  document.getElementById("meLove").value=meProfile.love||"";
+  document.getElementById("meRedFlags").value=meProfile.redFlags||"";
+  document.getElementById("mePatterns").value=meProfile.patterns||"";
+  document.getElementById("meGrowth").value=meProfile.growth||"";
+}
+function logMood(){
+  const s=document.getElementById("moodScore").value;
+  if(!s){alert("Pick a score");return}
+  moods.push({date:new Date().toISOString(),score:+s,note:document.getElementById("moodNote").value.trim()});
+  save(MOODK,moods);
+  document.getElementById("moodScore").value="";document.getElementById("moodNote").value="";
+  renderMoods();
+}
+function delMood(i){if(confirm("Delete?")){moods.splice(i,1);save(MOODK,moods);renderMoods()}}
+function renderMoods(){
+  const el=document.getElementById("moodList");
+  if(!moods.length){el.innerHTML='<div class="empty">No check-ins yet.</div>';return}
+  const sorted=[...moods].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,14);
+  el.innerHTML=sorted.map(m=>{
+    const d=new Date(m.date),idx=moods.indexOf(m);
+    const c=m.score>=7?"#4ade80":m.score>=4?"#facc15":"#f87171";
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2a3a52"><span style="font-size:.85rem">${d.toLocaleDateString(undefined,{month:"short",day:"numeric"})} ${d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"})}${m.note?" · "+esc(m.note):""}</span><span><span style="font-weight:800;color:${c}">${m.score}</span> <button class="del" style="background:none;border:none;color:#8a9bb0;cursor:pointer" onclick="delMood(${idx})">×</button></span></div>`;
+  }).join("");
+}
+function renderInsights(){
+  const el=document.getElementById("insightList");
+  let insights=[];
+  // Mood swing detection
+  if(moods.length>=5){
+    const recent=moods.slice(-10).map(m=>m.score);
+    const avg=recent.reduce((a,b)=>a+b,0)/recent.length;
+    const variance=Math.max(...recent)-Math.min(...recent);
+    if(variance>=5)insights.push({t:"Mood swings detected",d:`Your mood has swung from ${Math.min(...recent)} to ${Math.max(...recent)} in your last ${recent.length} check-ins. Big swings can affect how you show up in dating. Notice what triggers the drops.`});
+    else if(avg<4)insights.push({t:"Low mood stretch",d:`Your average mood is ${avg.toFixed(1)}/10 lately. Dating from a low place can lead to settling or self-sabotage. Take care of you first.`});
+    else if(avg>=7)insights.push({t:"You're in a good place",d:`Average mood ${avg.toFixed(1)}/10. Good energy for dating with clear eyes.`});
+  }
+  // Trust pattern
+  if(people.length>=2){
+    const trusts=people.map(p=>+p.trust||0).filter(Boolean);
+    if(trusts.length>=2&&trusts.every(t=>t<=4))insights.push({t:"Trust wall",d:"You rate everyone low on trust. That might say more about your guard than about them. Worth asking: is this discernment or a wall?"});
+    const feelings=people.map(p=>+p.feeling||0).filter(Boolean);
+    if(feelings.length>=2&&feelings.every(f=>f<=4))insights.push({t:"Drained by everyone",d:"Everyone leaves you feeling drained. The common denominator might be your picker, not the people. What draws you in at first?"});
+  }
+  // Red flag hypocrisy check
+  const myRed=(meProfile.redFlags||"").toLowerCase();
+  if(myRed&&people.length){
+    const allTheirRed=people.map(p=>(p.red||"").toLowerCase()).join(" ");
+    const mine=myRed.split(",").map(s=>s.trim()).filter(Boolean);
+    const overlap=mine.filter(m=>m&&allTheirRed.includes(m));
+    if(overlap.length)insights.push({t:"Mirror check",d:`You listed "${overlap[0]}" as YOUR red flag, but you've also flagged partners for similar things. We attract what we are. Something to sit with.`});
+  }
+  // Attachment style insight
+  if(meProfile.attach==="Anxious")insights.push({t:"Anxious attachment",d:"You identified as anxiously attached. You may read distance as rejection and chase harder when someone pulls back. The right person won't make you feel crazy for needing reassurance."});
+  if(meProfile.attach==="Avoidant")insights.push({t:"Avoidant attachment",d:"You identified as avoidant. You may pull away right when things get good. Notice if you lose interest the moment someone actually shows up for you."});
+  if(meProfile.attach==="Disorganized")insights.push({t:"Disorganized attachment",d:"You identified as disorganized. You might crave closeness and fear it at the same time. This isn't broken, it's a pattern you can work with."});
+  // Conflict style
+  if(meProfile.conflict==="Shut down / go silent")insights.push({t:"Silent treatment pattern",d:"You shut down during conflict. Silence feels safe but it reads as punishment to a partner. Even 'I need an hour' is better than disappearing."});
+  if(meProfile.conflict==="Get heated")insights.push({t:"Heated conflict",d:"You get heated in conflict. Strong emotions aren't wrong, but the delivery matters. The goal is to be heard, not to win."});
+  // Self-reported patterns
+  if(meProfile.patterns)insights.push({t:"Your own words",d:`You said: "${meProfile.patterns}" Recognizing the pattern is step one. The app will keep showing you if you're repeating it.`});
+  // Not enough data
+  if(!insights.length)insights.push({t:"Keep logging",d:"Log your moods daily and add a few people. The more honest data you put in, the sharper these insights get."});
+  el.innerHTML=insights.map(i=>`<div style="background:#141b28;border-left:3px solid #0284c7;border-radius:8px;padding:12px;margin-bottom:10px"><div style="font-weight:700;color:#7dd3fc;margin-bottom:4px">${esc(i.t)}</div><div style="font-size:.88rem;line-height:1.5;color:#c8d4e0">${esc(i.d)}</div></div>`).join("");
+  renderCompare();
+}
+</script>
+</body>
+</html>
